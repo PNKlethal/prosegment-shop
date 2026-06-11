@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Админка — ПРО-сегмент</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f4f4;color:#080808;min-height:100vh}
+
+/* Layout */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#080808;flex-shrink:0;display:flex;flex-direction:column}
+.main{flex:1;overflow:hidden}
+
+/* Sidebar */
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-logo img{width:36px;height:36px;border-radius:50%;vertical-align:middle}
+.sidebar-logo span{color:#fff;font-size:15px;font-weight:700;margin-left:10px}
+nav a{display:flex;align-items:center;gap:10px;padding:12px 20px;color:rgba(255,255,255,.6);
+  text-decoration:none;font-size:14px;transition:all .15s;cursor:pointer}
+nav a:hover,nav a.active{color:#fff;background:rgba(255,255,255,.06)}
+nav a.active{border-left:3px solid #F95215;padding-left:17px}
+nav a svg{flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08)}
+.sidebar-footer a{color:rgba(255,255,255,.4);font-size:13px;text-decoration:none}
+.sidebar-footer a:hover{color:#fff}
+
+/* Header */
+.page-header{background:#fff;padding:20px 32px;border-bottom:1px solid #eee;
+  display:flex;align-items:center;justify-content:space-between}
+.page-title{font-size:20px;font-weight:700}
+.page-content{padding:32px}
+
+/* Stat cards */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{background:#fff;border-radius:10px;padding:20px 24px}
+.stat-label{font-size:13px;color:#888;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:700;color:#080808}
+.stat-value.orange{color:#F95215}
+.stat-value.red{color:#cf1322}
+
+/* Table */
+.table-wrap{background:#fff;border-radius:10px;overflow:hidden}
+.table-toolbar{padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #f0f0f0}
+.search{padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;width:240px;outline:none}
+.search:focus{border-color:#F95215}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:12px 16px;font-size:12px;font-weight:700;color:#888;
+  text-transform:uppercase;letter-spacing:.05em;background:#fafafa;border-bottom:1px solid #f0f0f0}
+td{padding:13px 16px;font-size:14px;border-bottom:1px solid #f9f9f9;vertical-align:middle}
+tr:hover td{background:#fafafa}
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700}
+.badge-green{background:#f6ffed;color:#389e0d}
+.badge-gray{background:#f5f5f5;color:#888}
+.badge-red{background:#fff2f0;color:#cf1322}
+.badge-orange{background:#fff7e6;color:#d48806}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:6px;font-size:14px;font-weight:700;
+  cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:#F95215;color:#fff}
+.btn-primary:hover{background:#e04510}
+.btn-secondary{background:#f0f0f0;color:#333}
+.btn-secondary:hover{background:#e5e5e5}
+.btn-danger{background:#fff2f0;color:#cf1322;border:1px solid #ffccc7}
+.btn-danger:hover{background:#cf1322;color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;
+  display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:560px;
+  max-height:90vh;overflow-y:auto;padding:32px}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:24px}
+.field{margin-bottom:18px}
+label.fl{display:block;font-size:13px;color:#555;font-weight:700;margin-bottom:6px}
+input.fi,select.fi,textarea.fi{width:100%;padding:10px 12px;border:1px solid #ddd;
+  border-radius:6px;font-size:14px;outline:none;font-family:inherit}
+input.fi:focus,select.fi:focus,textarea.fi:focus{border-color:#F95215}
+textarea.fi{min-height:120px;resize:vertical}
+.file-upload{border:2px dashed #ddd;border-radius:8px;padding:24px;text-align:center;
+  cursor:pointer;transition:border-color .15s}
+.file-upload:hover,.file-upload.drag{border-color:#F95215}
+.file-upload input{display:none}
+.file-name{font-size:13px;color:#F95215;margin-top:8px;font-weight:700}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;
+  padding-top:20px;border-top:1px solid #f0f0f0}
+
+/* Logs */
+.log-item{padding:12px 16px;border-bottom:1px solid #f5f5f5;font-size:13px;display:flex;gap:12px}
+.log-time{color:#aaa;white-space:nowrap;width:145px;flex-shrink:0}
+.log-msg{flex:1;word-break:break-word}
+.log-error .log-msg{color:#cf1322}
+.log-warn  .log-msg{color:#d48806}
+
+/* Pagination */
+.pagination{display:flex;gap:6px;align-items:center;padding:16px 20px;border-top:1px solid #f0f0f0}
+.page-btn{padding:6px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;
+  cursor:pointer;font-size:13px}
+.page-btn.active,.page-btn:hover{background:#F95215;color:#fff;border-color:#F95215}
+
+.empty{text-align:center;padding:48px;color:#aaa;font-size:15px}
+.hidden{display:none}
+.tab-bar{display:flex;gap:0;border-bottom:2px solid #f0f0f0;margin-bottom:24px}
+.tab{padding:10px 20px;cursor:pointer;font-size:14px;color:#888;
+  border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.tab.active{color:#F95215;border-bottom-color:#F95215;font-weight:700}
+
+#toast{position:fixed;bottom:24px;right:24px;background:#080808;color:#fff;
+  padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;
+  opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://drive.google.com/uc?export=view&id=1R_6vVGS353pg995sDScC16Pn_XQH5DTf" alt="">
+      <span>ПРО-сегмент</span>
+    </div>
+    <nav>
+      <a onclick="showPage('dashboard')" id="nav-dashboard" class="active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Дашборд
+      </a>
+      <a onclick="showPage('products')" id="nav-products">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        Товары
+      </a>
+      <a onclick="showPage('orders')" id="nav-orders">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        Заказы
+      </a>
+      <a onclick="showPage('logs')" id="nav-logs">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+        Логи
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/admin/logout">Выйти</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- ДАШБОРД -->
+    <div id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Дашборд</div>
+      </div>
+      <div class="page-content">
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Всего заказов</div>
+            <div class="stat-value" id="stat-orders">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Выручка</div>
+            <div class="stat-value orange" id="stat-revenue">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Активных товаров</div>
+            <div class="stat-value" id="stat-products">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Ошибок (24ч)</div>
+            <div class="stat-value red" id="stat-errors">—</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar" style="font-weight:700;font-size:15px">Последние заказы</div>
+          <div id="dash-orders-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ТОВАРЫ -->
+    <div id="page-products" class="hidden">
+      <div class="page-header">
+        <div class="page-title">Товары</div>
+        <button class="btn btn-primary" onclick="openProductModal()">+ Добавить товар</button>
+      </div>
+      <div class="page-content">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input class="search" placeholder="Поиск по названию…" oninput="filterProducts(this.value)">
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Slug (ключ из Tilda)</th><th>Название</th>
+                <th>Файл</th><th>Тип</th><th>Статус</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+          <div class="empty hidden" id="products-empty">Товаров пока нет. Добавьте первый!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ЗАКАЗЫ -->
+    <div id="page-orders" class="hidden">
+      <div class="page-header">
+        <div class="page-title">Заказы</div>
+      </div>
+      <div class="page-content">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input class="search" id="orders-search" placeholder="Поиск по email или имени…"
+              oninput="loadOrders(1, this.value)">
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Дата</th><th>Покупатель</th>
+                <th>Товары</th><th>Сумма</th><th>Письмо</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+          <div class="empty hidden" id="orders-empty">Заказов пока нет</div>
+          <div class="pagination" id="orders-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ЛОГИ -->
+    <div id="page-logs" class="hidden">
+      <div class="page-header">
+        <div class="page-title">Логи</div>
+      </div>
+      <div class="page-content">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <div class="tab-bar" style="margin:0;border:none">
+              <div class="tab active" onclick="loadLogs('all',this)">Все</div>
+              <div class="tab" onclick="loadLogs('error',this)">Ошибки</div>
+              <div class="tab" onclick="loadLogs('warn',this)">Предупреждения</div>
+              <div class="tab" onclick="loadLogs('info',this)">Информация</div>
+            </div>
+          </div>
+          <div id="logs-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div>
+
+<!-- Модалка товара -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Новый товар</div>
+    <input type="hidden" id="product-id">
+
+    <div class="field">
+      <label class="fl">Slug — ключ из Tilda <span style="color:#888;font-weight:400">(название товара в корзине)</span></label>
+      <input class="fi" id="f-slug" placeholder="Приказ о внесении изменений в ООПП">
+      <div style="font-size:12px;color:#aaa;margin-top:4px">Точно как называется товар в Tilda — регистр не важен</div>
+    </div>
+    <div class="field">
+      <label class="fl">Название для письма</label>
+      <input class="fi" id="f-name" placeholder="Приказ о внесении изменений в ООПП">
+    </div>
+    <div class="field">
+      <label class="fl">Тип файла</label>
+      <select class="fi" id="f-type">
+        <option value="pdf">PDF</option>
+        <option value="word">Word документ</option>
+        <option value="video">Видео</option>
+        <option value="text">Текстовый материал</option>
+        <option value="file">Другой файл</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="fl">Загрузить файл с компьютера</label>
+      <div class="file-upload" onclick="document.getElementById('f-file').click()"
+        ondragover="this.classList.add('drag');event.preventDefault()"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="handleDrop(event)">
+        <svg width="32" height="32" fill="none" stroke="#ccc" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <div style="font-size:13px;color:#aaa;margin-top:8px">Перетащите файл или нажмите для выбора</div>
+        <div class="file-name" id="file-chosen"></div>
+        <input type="file" id="f-file" onchange="showFileName(this)">
+      </div>
+    </div>
+    <div class="field">
+      <label class="fl">Или ссылка на файл (Google Drive, другой URL)</label>
+      <input class="fi" id="f-url" placeholder="https://drive.google.com/uc?export=download&id=...">
+    </div>
+    <div class="field">
+      <label class="fl">Кастомный HTML письма <span style="color:#888;font-weight:400">(необязательно — если пусто, используется шаблон)</span></label>
+      <textarea class="fi" id="f-html" placeholder="&lt;p&gt;Добрый день, {{name}}!&lt;/p&gt;...&#10;Плейсхолдеры: {{name}}, {{product}}, {{url}}"></textarea>
+    </div>
+    <div class="field" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="f-active" checked style="width:auto">
+      <label for="f-active" class="fl" style="margin:0">Товар активен</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let allProducts = [];
+let currentPage = 1;
+
+// ── Навигация ──────────────────────────────────────────────────────
+function showPage(name) {
+  ['dashboard','products','orders','logs'].forEach(p => {
+    document.getElementById('page-'+p).classList.toggle('hidden', p!==name);
+    document.getElementById('nav-'+p).classList.toggle('active', p===name);
+  });
+  if (name==='dashboard') loadDashboard();
+  if (name==='products')  loadProducts();
+  if (name==='orders')    loadOrders(1);
+  if (name==='logs')      loadLogs('all');
+}
+
+// ── API хелпер ─────────────────────────────────────────────────────
+async function api(url, opts={}) {
+  const res = await fetch('/admin' + url, {
+    headers: {'Content-Type':'application/json', 'Accept':'application/json'},
+    ...opts
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({error:'Ошибка сервера'}));
+    throw new Error(err.error || 'Ошибка');
+  }
+  return res.json();
+}
+
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok ? '#080808' : '#cf1322';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function fmtDate(d) {
+  return new Date(d).toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',
+    year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Дашборд ────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [stats, orders] = await Promise.all([
+    api('/api/stats'),
+    api('/api/orders?limit=8')
+  ]);
+  document.getElementById('stat-orders').textContent   = stats.orders;
+  document.getElementById('stat-revenue').textContent  = stats.revenue.toLocaleString('ru') + ' ₽';
+  document.getElementById('stat-products').textContent = stats.products;
+  document.getElementById('stat-errors').textContent   = stats.errors;
+
+  const tbody = orders.orders.map(o => `
+    <tr>
+      <td>#${o.id}</td>
+      <td>${fmtDate(o.created_at)}</td>
+      <td><b>${o.buyer_name||'—'}</b><br><span style="color:#888;font-size:12px">${o.buyer_email}</span></td>
+      <td>${(typeof o.products === 'string' ? JSON.parse(o.products||'[]') : (o.products||[])).map(p=>p.title||p).join(', ')}</td>
+      <td>${o.amount||0} ₽</td>
+      <td>${o.email_sent
+        ? '<span class="badge badge-green">✓ Отправлено</span>'
+        : '<span class="badge badge-orange">Ожидает</span>'}</td>
+    </tr>`).join('');
+  document.getElementById('dash-orders-list').innerHTML =
+    `<table><thead><tr><th>ID</th><th>Дата</th><th>Покупатель</th>
+     <th>Товары</th><th>Сумма</th><th>Письмо</th></tr></thead>
+     <tbody>${tbody||'<tr><td colspan=6 class=empty>Заказов ещё нет</td></tr>'}</tbody></table>`;
+}
+
+// ── Товары ─────────────────────────────────────────────────────────
+async function loadProducts() {
+  allProducts = await api('/api/products');
+  renderProducts(allProducts);
+}
+
+function renderProducts(products) {
+  const empty = document.getElementById('products-empty');
+  if (!products.length) { empty.classList.remove('hidden'); }
+  else { empty.classList.add('hidden'); }
+
+  document.getElementById('products-tbody').innerHTML = products.map(p => `
+    <tr>
+      <td style="color:#aaa">#${p.id}</td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:12px">${p.slug}</code></td>
+      <td><b>${p.name}</b></td>
+      <td style="font-size:12px;color:#888">
+        ${p.file_path ? '📎 '+p.file_path.split('/').pop() : p.file_url ? '🔗 ссылка' : '—'}</td>
+      <td><span class="badge badge-gray">${p.file_type||'file'}</span></td>
+      <td>${p.active
+        ? '<span class="badge badge-green">Активен</span>'
+        : '<span class="badge badge-gray">Скрыт</span>'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="editProduct(${p.id})">Изменить</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id},'${p.name.replace(/'/g,"\\'")}')">Удалить</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterProducts(q) {
+  const f = q.toLowerCase();
+  renderProducts(allProducts.filter(p =>
+    p.name.toLowerCase().includes(f) || p.slug.toLowerCase().includes(f)
+  ));
+}
+
+// ── Модалка товара ─────────────────────────────────────────────────
+function openProductModal(product=null) {
+  document.getElementById('product-modal').classList.add('open');
+  document.getElementById('modal-title').textContent = product ? 'Редактировать товар' : 'Новый товар';
+  document.getElementById('product-id').value = product?.id || '';
+  document.getElementById('f-slug').value     = product?.slug || '';
+  document.getElementById('f-name').value     = product?.name || '';
+  document.getElementById('f-url').value      = product?.file_url || '';
+  document.getElementById('f-html').value     = product?.email_html || '';
+  document.getElementById('f-active').checked = product ? product.active : true;
+  document.getElementById('f-file').value     = '';
+  document.getElementById('file-chosen').textContent = '';
+  if (product?.file_type) document.getElementById('f-type').value = product.file_type;
+}
+
+function closeModal() {
+  document.getElementById('product-modal').classList.remove('open');
+}
+
+function showFileName(input) {
+  document.getElementById('file-chosen').textContent =
+    input.files[0] ? '📎 ' + input.files[0].name : '';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  document.getElementById('f-file').files = dt.files;
+  document.getElementById('file-chosen').textContent = '📎 ' + file.name;
+}
+
+async function saveProduct() {
+  const id   = document.getElementById('product-id').value;
+  const fd   = new FormData();
+  fd.append('slug',       document.getElementById('f-slug').value.trim());
+  fd.append('name',       document.getElementById('f-name').value.trim());
+  fd.append('file_url',   document.getElementById('f-url').value.trim());
+  fd.append('file_type',  document.getElementById('f-type').value);
+  fd.append('email_html', document.getElementById('f-html').value.trim());
+  fd.append('active',     document.getElementById('f-active').checked);
+
+  const fileInput = document.getElementById('f-file');
+  if (fileInput.files[0]) fd.append('file', fileInput.files[0]);
+
+  try {
+    const res = await fetch('/admin/api/products' + (id ? '/'+id : ''), {
+      method: id ? 'PUT' : 'POST',
+      body: fd
+    });
+    if (!res.ok) { const e=await res.json(); throw new Error(e.error); }
+    closeModal();
+    loadProducts();
+    toast(id ? 'Товар обновлён ✓' : 'Товар добавлен ✓');
+  } catch(err) { toast(err.message, false); }
+}
+
+async function editProduct(id) {
+  const p = await api('/api/products/'+id);
+  openProductModal(p);
+}
+
+async function deleteProduct(id, name) {
+  if (!confirm(`Удалить товар "${name}"?`)) return;
+  try {
+    await api('/api/products/'+id, {method:'DELETE'});
+    loadProducts();
+    toast('Товар удалён');
+  } catch(err) { toast(err.message, false); }
+}
+
+// ── Заказы ─────────────────────────────────────────────────────────
+async function loadOrders(page=1, search='') {
+  currentPage = page;
+  const data = await api(`/api/orders?page=${page}&limit=50&search=${encodeURIComponent(search||'')}`);
+  const empty = document.getElementById('orders-empty');
+
+  if (!data.orders.length) {
+    empty.classList.remove('hidden');
+    document.getElementById('orders-tbody').innerHTML = '';
+  } else {
+    empty.classList.add('hidden');
+    document.getElementById('orders-tbody').innerHTML = data.orders.map(o => {
+      const prods = (typeof o.products === 'string' ? JSON.parse(o.products||'[]') 
+      : (o.products||[])).map(p=>p.title||p).join(', ');
+      return `<tr>
+        <td style="color:#aaa">#${o.id}</td>
+        <td>${fmtDate(o.created_at)}</td>
+        <td><b>${o.buyer_name||'—'}</b><br>
+          <span style="font-size:12px;color:#888">${o.buyer_email}</span></td>
+        <td style="max-width:200px;font-size:13px">${prods}</td>
+        <td><b>${o.amount||0} ₽</b></td>
+        <td>${o.email_sent
+          ? '<span class="badge badge-green">✓ Отправлено</span>'
+          : '<span class="badge badge-orange">Не отправлено</span>'}</td>
+        <td>
+          ${!o.email_sent ? `<button class="btn btn-secondary btn-sm"
+            onclick="resendOrder(${o.id})">Отправить</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Пагинация
+  const totalPages = Math.ceil(data.total / 50);
+  const pg = document.getElementById('orders-pagination');
+  if (totalPages <= 1) { pg.innerHTML=''; return; }
+  pg.innerHTML = Array.from({length:totalPages},(_,i)=>i+1).map(p =>
+    `<button class="page-btn${p===page?' active':''}" onclick="loadOrders(${p},'${search}')">${p}</button>`
+  ).join('') + `<span style="font-size:13px;color:#aaa;margin-left:8px">
+    Всего: ${data.total}</span>`;
+}
+
+async function resendOrder(id) {
+  try {
+    await api('/api/orders/'+id+'/resend', {method:'POST'});
+    toast('Письмо отправлено повторно ✓');
+    loadOrders(currentPage);
+  } catch(err) { toast(err.message, false); }
+}
+
+// ── Логи ───────────────────────────────────────────────────────────
+async function loadLogs(level='all', tabEl=null) {
+  if (tabEl) {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tabEl.classList.add('active');
+  }
+  const logs = await api('/api/logs?level='+level+'&limit=200');
+  document.getElementById('logs-list').innerHTML = logs.length
+    ? logs.map(l => `
+      <div class="log-item ${l.level==='error'?'log-error':l.level==='warn'?'log-warn':''}">
+        <div class="log-time">${fmtDate(l.created_at)}</div>
+        <div class="log-msg">${l.message}
+          ${l.payload ? `<details style="margin-top:4px">
+            <summary style="cursor:pointer;color:#aaa;font-size:12px">Данные</summary>
+            <pre style="font-size:11px;background:#f9f9f9;padding:8px;border-radius:4px;
+              overflow-x:auto;margin-top:4px">${JSON.stringify(l.payload,null,2)}</pre>
+          </details>` : ''}
+        </div>
+      </div>`).join('')
+    : '<div class="empty">Логов нет</div>';
+}
+
+// Закрыть модалку по клику на оверлей
+document.getElementById('product-modal').addEventListener('click', function(e) {
+  if (e.target===this) closeModal();
+});
+
+// Загружаем дашборд при старте
+loadDashboard();
+</script>
+</body>
+</html>
