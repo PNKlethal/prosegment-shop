@@ -48,7 +48,7 @@ function buildEmailHtml(buyerName, product, fileUrl) {
 
   <!-- Шапка -->
   <tr><td align="center" style="padding:36px 40px 28px;border-bottom:3px solid #F95215;">
-    <img src="${LOGO_URL}" width="56" height="56" alt="ПРО-сегмент"
+    <img src="${LOGO_URL}" width="90" height="90" alt="ПРО-сегмент"
       style="display:block;border-radius:50%;border:0;">
   </td></tr>
 
