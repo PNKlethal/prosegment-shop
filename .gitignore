@@ -1,0 +1,7 @@
+node_modules/
+.env
+ngrok.exe
+check.js
+test.js
+uploads/
+*.log
