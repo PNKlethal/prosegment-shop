@@ -12,7 +12,7 @@ router.post('/', async (req, res) => {
 
   try {
     const buyerEmail = params.Email || params.email || '';
-    const buyerName  = params.Name  || params.name  || 'Покупатель';
+    const buyerName  = params.Name  || params.name  || params.fio || params.ma_name || 'Покупатель';
     const buyerPhone = params.Phone || params.phone || '';
 
     if (!buyerEmail) {
